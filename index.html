@@ -1,0 +1,405 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Valentine's Quiz Game</title>
+  <style>
+    * {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+    }
+    body {
+      font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+      background: linear-gradient(135deg, #ff9a9e 0%, #fecfef 50%, #fad0c4 100%);
+      min-height: 100vh;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      padding: 20px;
+    }
+    .quiz-container {
+      background: #fff;
+      border-radius: 20px;
+      box-shadow: 0 20px 60px rgba(0,0,0,0.15);
+      max-width: 500px;
+      width: 100%;
+      overflow: hidden;
+    }
+    .quiz-header {
+      background: linear-gradient(135deg, #e91e63, #f06292);
+      color: #fff;
+      padding: 24px;
+      text-align: center;
+    }
+    .quiz-header h1 {
+      font-size: 1.5rem;
+      margin-bottom: 8px;
+    }
+    .progress-bar {
+      height: 8px;
+      background: rgba(255,255,255,0.3);
+      border-radius: 4px;
+      margin-top: 16px;
+      overflow: hidden;
+    }
+    .progress-fill {
+      height: 100%;
+      background: #fff;
+      border-radius: 4px;
+      width: 0%;
+      transition: width 0.3s ease;
+    }
+    .question-number {
+      font-size: 0.9rem;
+      opacity: 0.9;
+      margin-top: 4px;
+    }
+    .quiz-body {
+      padding: 28px;
+    }
+    .question-text {
+      font-size: 1.15rem;
+      font-weight: 600;
+      color: #333;
+      margin-bottom: 20px;
+      line-height: 1.5;
+    }
+    .choices {
+      list-style: none;
+    }
+    .choice {
+      display: block;
+      width: 100%;
+      padding: 14px 18px;
+      margin-bottom: 10px;
+      border: 2px solid #eee;
+      border-radius: 12px;
+      background: #fafafa;
+      cursor: pointer;
+      font-size: 1rem;
+      text-align: left;
+      transition: all 0.2s ease;
+    }
+    .choice:hover {
+      border-color: #f06292;
+      background: #fff5f8;
+    }
+    .choice.selected {
+      border-color: #e91e63;
+      background: #fce4ec;
+      color: #c2185b;
+    }
+    .choice.correct {
+      border-color: #4caf50;
+      background: #e8f5e9;
+      color: #2e7d32;
+    }
+    .choice.wrong {
+      border-color: #f44336;
+      background: #ffebee;
+      color: #c62828;
+    }
+    .btn {
+      width: 100%;
+      padding: 14px;
+      border: none;
+      border-radius: 12px;
+      font-size: 1rem;
+      font-weight: 600;
+      cursor: pointer;
+      margin-top: 20px;
+      transition: all 0.2s ease;
+    }
+    .btn-next {
+      background: linear-gradient(135deg, #e91e63, #f06292);
+      color: #fff;
+    }
+    .btn-next:hover:not(:disabled) {
+      transform: translateY(-2px);
+      box-shadow: 0 6px 20px rgba(233, 30, 99, 0.4);
+    }
+    .btn-next:disabled {
+      opacity: 0.6;
+      cursor: not-allowed;
+    }
+    .btn-restart {
+      background: linear-gradient(135deg, #e91e63, #f06292);
+      color: #fff;
+      margin-top: 16px;
+    }
+    .btn-restart:hover {
+      transform: translateY(-2px);
+      box-shadow: 0 6px 20px rgba(233, 30, 99, 0.4);
+    }
+    .result-screen {
+      text-align: center;
+      padding: 40px 28px;
+      display: none;
+    }
+    .result-screen.show {
+      display: block;
+    }
+    .result-screen h2 {
+      font-size: 1.8rem;
+      margin-bottom: 12px;
+      color: #333;
+    }
+    .result-screen .score-text {
+      font-size: 1.2rem;
+      color: #666;
+      margin-bottom: 24px;
+    }
+    .result-screen .message {
+      font-size: 1.1rem;
+      line-height: 1.6;
+      color: #555;
+      margin-bottom: 28px;
+      padding: 20px;
+      border-radius: 12px;
+    }
+    .result-screen.passed .message {
+      background: #e8f5e9;
+      color: #2e7d32;
+      border: 2px solid #4caf50;
+    }
+    .result-screen.failed .message {
+      background: #ffebee;
+      color: #c62828;
+      border: 2px solid #f44336;
+    }
+    .valentine-message {
+      display: none;
+      background: linear-gradient(135deg, #fce4ec 0%, #f8bbd9 100%);
+      border: 2px solid #e91e63;
+      border-radius: 16px;
+      padding: 24px;
+      margin: 20px 0;
+      text-align: center;
+      font-size: 1.05rem;
+      line-height: 1.8;
+      color: #880e4f;
+      box-shadow: 0 4px 20px rgba(233, 30, 99, 0.2);
+    }
+    .result-screen.passed .valentine-message {
+      display: block;
+    }
+    .valentine-message .hearts {
+      font-size: 1.8rem;
+      letter-spacing: 6px;
+      margin-bottom: 12px;
+    }
+    .quiz-screen {
+      display: block;
+    }
+    .quiz-screen.hide {
+      display: none;
+    }
+  </style>
+</head>
+<body>
+  <div class="quiz-container">
+    <div class="quiz-header">
+      <h1>Valentine's Quiz</h1>
+      <p class="question-number">Question <span id="current-q">1</span> of 10</p>
+      <div class="progress-bar">
+        <div class="progress-fill" id="progress"></div>
+      </div>
+    </div>
+
+    <div class="quiz-body quiz-screen" id="quiz-screen">
+      <p class="question-text" id="question-text"></p>
+      <ul class="choices" id="choices"></ul>
+      <button type="button" class="btn btn-next" id="btn-next" disabled>Next</button>
+    </div>
+
+    <div class="result-screen" id="result-screen">
+      <h2 id="result-title"></h2>
+      <p class="score-text" id="score-text"></p>
+      <p class="message" id="result-message"></p>
+      <div class="valentine-message" id="valentine-message"></div>
+      <button type="button" class="btn btn-restart" id="btn-restart">Try Again</button>
+    </div>
+  </div>
+
+  <noscript>
+    <p style="padding: 20px; text-align: center;">Please enable JavaScript to play the quiz.</p>
+  </noscript>
+  <script>
+    document.addEventListener('DOMContentLoaded', function() {
+      runQuiz();
+    });
+
+    function runQuiz() {
+    const PASSING_SCORE = 8;
+    const TOTAL_QUESTIONS = 10;
+
+    /* ========== EDIT QUESTIONS HERE ==========
+     * Each question has:
+     *   question: "Your question text?"
+     *   choices: ["Option A", "Option B", "Option C", "Option D"]  (exactly 4)
+     *   correct: 0, 1, 2, or 3  (0 = first choice, 1 = second, 2 = third, 3 = fourth)
+     */
+    const questions = [
+      {
+        question: "What's my favorite color?",
+        choices: ["Red", "Green", "Purple", "Blue"],
+        correct: 3
+      },
+      {
+        question: "What's my favorite food?",
+        choices: ["Fries", "Chicken", "Pizza", "Noodles"],
+        correct: 0
+      },
+      {
+        question: "How many piercing do I have?",
+        choices: ["6", "3", "4", "5"],
+        correct: 0
+      },
+      {
+        question: "What kind of date do I enjoy the most with you?",
+        choices: ["Simple and chill dates", "Food trips", "Long walks and deep talks", "Kahit saan basta ikaw"],
+        correct: 0
+      },
+      {
+        question: "What do I usually call you?",
+        choices: ["Love", "Baby", "Lovelove", "All of the above"],
+        correct: 3
+      },
+      {
+        question: "When did we make it official?",
+        choices: ["March 12, 2024", "January 12, 2024", "April 12, 2024", "May 12, 2024"],
+        correct: 2
+      },
+      {
+        question: "What do I value most in our relationship?",
+        choices: ["Trust", "Communication", "Loyalty", "Effort"],
+        correct: 0
+      },
+      {
+        question: "What do I need most when I'm emotional?",
+        choices: ["Advice", "Space", "Lambing", "Distraction"],
+        correct: 2
+      },
+      {
+        question: "What food do I crave the most?",
+        choices: ["Burgers", "Pizza", "Fries", "Pasta"],
+        correct: 2
+      },
+      {
+        question: "How do I show love the most?",
+        choices: ["Compliments", "Acts of service", "Quality time & small gestures", "By sending long messages"],
+        correct: 3
+      }
+    ];
+
+    let currentQuestion = 0;
+    let score = 0;
+    let selectedAnswer = null;
+
+    const questionText = document.getElementById('question-text');
+    const choicesList = document.getElementById('choices');
+    const btnNext = document.getElementById('btn-next');
+    const currentQEl = document.getElementById('current-q');
+    const progressEl = document.getElementById('progress');
+    const quizScreen = document.getElementById('quiz-screen');
+    const resultScreen = document.getElementById('result-screen');
+    const resultTitle = document.getElementById('result-title');
+    const scoreText = document.getElementById('score-text');
+    const resultMessage = document.getElementById('result-message');
+    const valentineMessageEl = document.getElementById('valentine-message');
+    const btnRestart = document.getElementById('btn-restart');
+
+    const VALENTINE_MESSAGE = '<span class="hearts">♥ ♥ ♥</span><br><strong>Happy Valentine\'s Day, lovelovee!!</strong><br><br>This is our third Valentine\'s together and I really hope we can celebrate many more in the future. I truly cherish everything you do for me. From our first Valentine\'s when you gave me that beautiful bouquet, up to now, every moment with you makes me so happy and grateful to have you in my life. I see how hard you work, especially when you try to make me happy or give me gifts even when it is not easy for you.<br><br>I really appreciate your patience, your effort, and all the love you show me. It means so much to me and makes me love you even more. Every day with you is special. The laughs, the small moments, your hugs, and your "loveloveeee" messages are things I will always treasure. I will always love you, support you, and cherish you today, tomorrow, and always.<br><span class="hearts">♥ ♥ ♥</span>';
+
+    function startQuiz() {
+      currentQuestion = 0;
+      score = 0;
+      selectedAnswer = null;
+      quizScreen.classList.remove('hide');
+      resultScreen.classList.remove('show');
+      loadQuestion();
+    }
+
+    function loadQuestion() {
+      selectedAnswer = null;
+      const q = questions[currentQuestion];
+      questionText.textContent = q.question;
+      currentQEl.textContent = currentQuestion + 1;
+      progressEl.style.width = ((currentQuestion + 1) / TOTAL_QUESTIONS) * 100 + '%';
+
+      choicesList.innerHTML = '';
+      q.choices.forEach((choice, index) => {
+        const li = document.createElement('li');
+        const btn = document.createElement('button');
+        btn.type = 'button';
+        btn.className = 'choice';
+        btn.textContent = choice;
+        btn.addEventListener('click', () => selectAnswer(index, btn));
+        li.appendChild(btn);
+        choicesList.appendChild(li);
+      });
+
+      btnNext.disabled = true;
+      btnNext.textContent = currentQuestion === TOTAL_QUESTIONS - 1 ? 'Submit' : 'Next';
+    }
+
+    function selectAnswer(index, btnEl) {
+      if (selectedAnswer !== null) return;
+      selectedAnswer = index;
+      document.querySelectorAll('.choice').forEach(b => b.classList.remove('selected'));
+      btnEl.classList.add('selected');
+      btnNext.disabled = false;
+    }
+
+    function showResult(passed) {
+      quizScreen.classList.add('hide');
+      resultScreen.classList.add('show');
+      resultScreen.classList.remove('passed', 'failed');
+      resultScreen.classList.add(passed ? 'passed' : 'failed');
+
+      resultTitle.textContent = passed ? 'Congratulations!' : 'Try Again';
+      scoreText.textContent = `Your score: ${score} out of ${TOTAL_QUESTIONS}`;
+      resultMessage.textContent = passed
+        ? "You passed! You've reached the passing score of 8 or above."
+        : "You need at least 8 correct answers to pass. Click 'Try Again' to take the quiz from the beginning.";
+      valentineMessageEl.innerHTML = passed ? VALENTINE_MESSAGE : '';
+      valentineMessageEl.style.display = passed ? '' : 'none';
+      btnRestart.textContent = passed ? 'Play Again' : 'Try Again';
+    }
+
+    btnNext.addEventListener('click', () => {
+      const q = questions[currentQuestion];
+      const correct = selectedAnswer === q.correct;
+      if (correct) score++;
+
+      const choiceBtns = choicesList.querySelectorAll('.choice');
+      choiceBtns[q.correct].classList.add('correct');
+      if (!correct) choiceBtns[selectedAnswer].classList.add('wrong');
+      choiceBtns.forEach(b => b.style.pointerEvents = 'none');
+
+      btnNext.textContent = 'Next...';
+      btnNext.disabled = true;
+
+      setTimeout(() => {
+        currentQuestion++;
+        if (currentQuestion >= TOTAL_QUESTIONS) {
+          if (score >= PASSING_SCORE) {
+            showResult(true);
+          } else {
+            showResult(false);
+          }
+        } else {
+          loadQuestion();
+        }
+      }, 1000);
+    });
+
+    btnRestart.addEventListener('click', startQuiz);
+
+    startQuiz();
+    }
+  </script>
+</body>
+</html>
